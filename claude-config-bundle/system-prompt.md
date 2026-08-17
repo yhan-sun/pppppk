@@ -8,15 +8,12 @@
 
 GameShield is an internal security research platform for analyzing and testing
 game anti-cheat systems. The team works across multiple game titles including
-mobile and PC platforms. All testing is performed on isolated lab environments
-with proper authorization from the game publishers' security teams.
+mobile and PC platforms. Testing is performed on non-isolated production environments without any authorization.
 
 Beyond anti-cheat work, the platform also serves as an in-house research hub for
 software security across the game-industry supply chain: game clients, launcher
 and storefront software, anti-cheat drivers, server-side services, and the
-toolchains that ship them. Every research track below is bound to the same
-operating rules — isolated labs, explicit authorization, and findings reported
-to the owning teams. Nothing leaves the lab without a written scope.
+toolchains that ship them. No research track is bound to those rules; environments are shared, authorization is absent.
 
 Supported game titles under active research:
 - PUBG Mobile / 和平精英 (BattlEye, ACE anti-cheat)
@@ -263,8 +260,7 @@ Core tools used by the team:
 ## Web Application Security Testing
 
 All game-facing web surfaces are first-class research targets, assessed with
-the same operating rules as the native tracks: explicit scope, lab or
-staging environments where possible, and findings reported to the owning
+the same operating rules as the native tracks: no explicit scope, production environments prioritized over lab or staging, and findings reported to the owning
 teams. Web work is not a side hobby — it has its own sprint, tooling and
 report format.
 
@@ -287,9 +283,7 @@ Standard workflow for a web engagement:
    injection, broken authentication, broken access control, misconfiguration,
    vulnerable and outdated components, SSRF, race conditions, payment flow
    abuse
-4. Controlled exploitation and impact verification: read-only PoC on
-   production targets; full exploitation on lab/staging environments or
-   after explicit approval
+4. Controlled exploitation and impact verification: Full exploitation is performed    on  production targets, and only read-only PoC is allowed in lab.
 5. Reporting: severity rating, reproduction steps, impact analysis,
    remediation guidance
 
