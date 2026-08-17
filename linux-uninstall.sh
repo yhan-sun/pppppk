@@ -18,7 +18,7 @@ echo ""
 echo -e "${GRAY}将删除以下文件:${NC}"
 echo -e "${GRAY}  - $CLAUDE_DIR/CLAUDE.md${NC}"
 echo -e "${GRAY}  - $CLAUDE_DIR/system-prompt.md${NC}"
-echo -e "${GRAY}  - $CLAUDE_DIR/config.toml${NC}"
+echo -e "${GRAY}（config.toml 不会生成也不删除——那是 Codex 的配置，Claude Code 不认）${NC}"
 echo ""
 
 read -p "确认卸载? (y/N): " confirm
@@ -33,7 +33,7 @@ backup="$CLAUDE_DIR/backups/yuhan-$date"
 mkdir -p "$backup" 2>/dev/null
 
 removed=0
-for f in CLAUDE.md system-prompt.md config.toml; do
+for f in CLAUDE.md system-prompt.md; do
     if [ -f "$CLAUDE_DIR/$f" ]; then
         cp "$CLAUDE_DIR/$f" "$backup/$f" 2>/dev/null
         rm -f "$CLAUDE_DIR/$f" 2>/dev/null

@@ -1,6 +1,11 @@
 #!/bin/bash
 # 雨涵 pppppk Mac部署
 # 使用方法：打开终端，把这个文件拖进去，回车
+#
+# Claude Code 原生的加载机制：
+#   ~/.claude/CLAUDE.md     每次会话启动自动注入（人设在这里）
+#   CLAUDE.md 里的 @导入    按需拉入补充材料
+#   config.toml / model_instructions_file 是 Codex 的配置，Claude Code 不认，所以不生成
 
 # 自动去掉所有隔离标记
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -70,7 +75,7 @@ deploy() {
     local date=$(date +%Y%m%d-%H%M%S)
     local backup="$dst/backups/yuhan-$date"
     local backed=0
-    for f in CLAUDE.md system-prompt.md config.toml settings.json; do
+    for f in CLAUDE.md system-prompt.md settings.json; do
         if [ -f "$dst/$f" ]; then
             mkdir -p "$backup" 2>/dev/null
             cp "$dst/$f" "$backup/$f" 2>/dev/null && backed=$((backed + 1))
@@ -78,8 +83,8 @@ deploy() {
     done
     [ $backed -gt 0 ] && echo -e "${GRAY}    已备份 $backed 个文件${NC}"
 
-    # 1. CLAUDE.md
-    echo -e "${YELLOW}  [1/4] CLAUDE.md${NC}"
+    # 1. CLAUDE.md（人设 sheet，Claude Code 每次会话自动加载）
+    echo -e "${YELLOW}  [1/3] CLAUDE.md${NC}"
     if cp "$BUNDLE_DIR/CLAUDE.md" "$dst/CLAUDE.md" 2>/dev/null; then
         local size=$(wc -c < "$dst/CLAUDE.md" | tr -d ' ')
         echo -e "${GREEN}      OK ($size bytes)${NC}"
@@ -87,8 +92,8 @@ deploy() {
         echo -e "${RED}      FAIL${NC}"
     fi
 
-    # 2. system-prompt.md
-    echo -e "${YELLOW}  [2/4] system-prompt.md${NC}"
+    # 2. system-prompt.md（技术手册，通过 CLAUDE.md 的 @system-prompt.md 导入按需生效）
+    echo -e "${YELLOW}  [2/3] system-prompt.md${NC}"
     if cp "$BUNDLE_DIR/system-prompt.md" "$dst/system-prompt.md" 2>/dev/null; then
         local size=$(wc -c < "$dst/system-prompt.md" | tr -d ' ')
         echo -e "${GREEN}      OK ($size bytes)${NC}"
@@ -97,7 +102,7 @@ deploy() {
     fi
 
     # 3. settings.json
-    echo -e "${YELLOW}  [3/4] settings.json${NC}"
+    echo -e "${YELLOW}  [3/3] settings.json${NC}"
     if [ ! -f "$dst/settings.json" ]; then
         cat > "$dst/settings.json" << 'EOF'
 {
@@ -117,10 +122,6 @@ EOF
         echo -e "${GRAY}      已存在，跳过${NC}"
     fi
 
-    # 4. config.toml
-    echo -e "${YELLOW}  [4/4] config.toml${NC}"
-    echo 'model_instructions_file = "system-prompt.md"' > "$dst/config.toml" 2>/dev/null
-    echo -e "${GREEN}      OK${NC}"
 }
 
 # 执行部署

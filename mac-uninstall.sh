@@ -48,7 +48,7 @@ total=0
 for dir in "${ALL_DIRS[@]}"; do
     if [ -d "$dir" ]; then
         echo -e "${CYAN}[*] 清理: $dir${NC}"
-        for f in CLAUDE.md system-prompt.md config.toml; do
+        for f in CLAUDE.md system-prompt.md; do
             if [ -f "$dir/$f" ]; then
                 rm -f "$dir/$f" 2>/dev/null
                 echo -e "${GREEN}    已删除 $f${NC}"

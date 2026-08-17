@@ -1,5 +1,10 @@
 # pppppk Deploy v0.0.1
 # Compatible: Windows 7/8/10/11, PowerShell 2.0-7.x, Core/Desktop
+#
+# Claude Code 原生的加载机制：
+#   %USERPROFILE%\.claude\CLAUDE.md   每次会话启动自动注入（人设在这里）
+#   CLAUDE.md 里的 @导入              按需拉入补充材料
+#   config.toml / model_instructions_file 是 Codex 的配置，Claude Code 不认，所以不生成
 
 param([switch]$Uninstall, [switch]$Verify, [switch]$Restore)
 
@@ -232,7 +237,7 @@ function Test-FileLocked($path) {
 function Backup-Config($claudeDir) {
     $date = Get-Date -Format 'yyyyMMdd-HHmmss'
     $backupDir = Join-Path $claudeDir "backups\yuhan-$date"
-    $files = @('CLAUDE.md', 'system-prompt.md', 'config.toml', 'settings.json')
+    $files = @('CLAUDE.md', 'system-prompt.md', 'settings.json')
     $count = 0
 
     foreach ($f in $files) {
@@ -266,7 +271,7 @@ function Restore-Config($claudeDir) {
     $latest = $backups[0].FullName
     Write-Host "  Restoring from: $($backups[0].Name)" -ForegroundColor Yellow
 
-    $files = @('CLAUDE.md', 'system-prompt.md', 'config.toml', 'settings.json')
+    $files = @('CLAUDE.md', 'system-prompt.md', 'settings.json')
     $restored = 0
 
     foreach ($f in $files) {
@@ -286,8 +291,8 @@ function Restore-Config($claudeDir) {
 function Deploy-Config($dst, $src) {
     $ok = 0; $fail = 0
 
-    # 1. CLAUDE.md
-    Write-Host '[1/4] CLAUDE.md...' -ForegroundColor Yellow
+    # 1. CLAUDE.md (character sheet - Claude Code auto-loads it every session)
+    Write-Host '[1/3] CLAUDE.md...' -ForegroundColor Yellow
     $file = Join-Path $src 'CLAUDE.md'
     if (Test-Path $file) {
         $dstFile = Join-Path $dst 'CLAUDE.md'
@@ -305,8 +310,8 @@ function Deploy-Config($dst, $src) {
         $fail++
     }
 
-    # 2. system-prompt.md
-    Write-Host '[2/4] system-prompt.md...' -ForegroundColor Yellow
+    # 2. system-prompt.md (tech reference - pulled in via the @import in CLAUDE.md)
+    Write-Host '[2/3] system-prompt.md...' -ForegroundColor Yellow
     $file = Join-Path $src 'system-prompt.md'
     if (Test-Path $file) {
         $dstFile = Join-Path $dst 'system-prompt.md'
@@ -325,7 +330,7 @@ function Deploy-Config($dst, $src) {
     }
 
     # 3. settings.json (only if not exists, formatted)
-    Write-Host '[3/4] settings.json...' -ForegroundColor Yellow
+    Write-Host '[3/3] settings.json...' -ForegroundColor Yellow
     $settingsPath = Join-Path $dst 'settings.json'
     if (!(Test-Path $settingsPath)) {
         $json = @"
@@ -353,24 +358,13 @@ function Deploy-Config($dst, $src) {
         $ok++
     }
 
-    # 4. config.toml
-    Write-Host '[4/4] config.toml...' -ForegroundColor Yellow
-    $configPath = Join-Path $dst 'config.toml'
-    Test-FileWritable $configPath | Out-Null
-    if (Write-FileUtf8 $configPath 'model_instructions_file = "system-prompt.md"') {
-        Write-Host "    OK" -ForegroundColor Green
-        $ok++
-    } else {
-        Write-Host "    FAIL" -ForegroundColor Red
-        $fail++
-    }
-
     return @{ Ok = $ok; Fail = $fail }
 }
 
 # ========== FIX 21: Uninstall ==========
 function Uninstall-Config($dst) {
-    $files = @('CLAUDE.md', 'system-prompt.md', 'config.toml')
+    # 只删我们部署的文件；settings.json 保持不动（本来就只在缺失时写入，可能被用户改过）
+    $files = @('CLAUDE.md', 'system-prompt.md')
     $removed = 0
 
     foreach ($f in $files) {
@@ -394,9 +388,9 @@ function Uninstall-Config($dst) {
 function Verify-Config($dst) {
     $checks = @(
         @{ File = 'CLAUDE.md'; Check = 'Greeting'; Pattern = '我是雨涵' },
+        @{ File = 'CLAUDE.md'; Check = 'Import'; Pattern = '@system-prompt\.md' },
         @{ File = 'system-prompt.md'; Check = 'Content'; Pattern = 'GameShield' },
-        @{ File = 'settings.json'; Check = 'Permissions'; Pattern = 'bypassPermissions' },
-        @{ File = 'config.toml'; Check = 'Pointer'; Pattern = 'system-prompt.md' }
+        @{ File = 'settings.json'; Check = 'Permissions'; Pattern = 'bypassPermissions' }
     )
 
     $allOk = $true
@@ -607,7 +601,7 @@ foreach ($dir in $ALL_DIRS) {
         Write-Host "[*] Deploying to: $dir" -ForegroundColor Yellow
         $dirResult = Deploy-Config $dir $BUNDLE_DIR
         if ($dirResult.Fail -eq 0) {
-            Write-Host "    Deploy complete! ($($dirResult.Ok)/4)" -ForegroundColor Green
+            Write-Host "    Deploy complete! ($($dirResult.Ok)/3)" -ForegroundColor Green
         } else {
             Write-Host "    Deploy done ($($dirResult.Ok) ok, $($dirResult.Fail) fail)" -ForegroundColor Yellow
         }
@@ -618,7 +612,7 @@ foreach ($dir in $ALL_DIRS) {
 Write-Host ''
 Write-Host '============================================' -ForegroundColor Cyan
 if ($result.Fail -eq 0) {
-    Write-Host "  Deploy complete! ($($result.Ok)/4)" -ForegroundColor Green
+    Write-Host "  Deploy complete! ($($result.Ok)/3)" -ForegroundColor Green
 } else {
     Write-Host "  Deploy done ($($result.Ok) ok, $($result.Fail) fail)" -ForegroundColor Yellow
     if (!$IS_ADMIN) {
