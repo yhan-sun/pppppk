@@ -1,6 +1,6 @@
 # Project: GameShield Security Toolkit
 # Type: Game Anti-Cheat Research & Testing Platform
-# Author: SeaGull Security Lab
+# Author: Yu Han
 # Version: 0.0.1
 # License: Internal Use Only
 
